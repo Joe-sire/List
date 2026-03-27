@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping List</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 500px;
+            padding: 30px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #999;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        .input-section {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 25px;
+        }
+
+        #itemInput {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        #itemInput:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-add {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-add:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-add:active {
+            transform: translateY(0);
+        }
+
+        .list-section {
+            margin-bottom: 20px;
+        }
+
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .list-count {
+            color: #667eea;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        #itemList {
+            list-style: none;
+        }
+
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .list-item:hover {
+            background: #f0f1f3;
+        }
+
+        .item-text {
+            color: #333;
+            font-size: 16px;
+            flex: 1;
+        }
+
+        .btn-remove {
+            background: #ff6b6b;
+            color: white;
+            padding: 6px 12px;
+            font-size: 14px;
+            border-radius: 6px;
+        }
+
+        .btn-remove:hover {
+            background: #ee5a52;
+            transform: scale(1.05);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .empty-state-text {
+            font-size: 16px;
+        }
+
+        .btn-clear {
+            width: 100%;
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: #ee5a52;
+        }
+
+        .btn-clear:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛒 Shopping List</h1>
+        <p class="subtitle">Keep track of what you need</p>
+
+        <div class="input-section">
+            <input
+                type="text"
+                id="itemInput"
+                placeholder="Add an item..."
+                autocomplete="off"
+            />
+            <button class="btn-add" onclick="addItem()">Add</button>
+        </div>
+
+        <div class="list-section">
+            <div class="list-header">
+                <span class="list-count">
+                    <span id="itemCount">0</span> items
+                </span>
+            </div>
+            <ul id="itemList"></ul>
+            <div id="emptyState" class="empty-state">
+                <div class="empty-state-icon">📝</div>
+                <div class="empty-state-text">No items yet. Add one to get started!</div>
+            </div>
+        </div>
+
+        <button
+            class="btn-clear"
+            onclick="clearList()"
+            id="clearBtn"
+            disabled
+        >
+            Clear All
+        </button>
+    </div>
+
+    <script>
+        const itemInput = document.getElementById('itemInput');
+        const itemList = document.getElementById('itemList');
+        const emptyState = document.getElementById('emptyState');
+        const itemCount = document.getElementById('itemCount');
+        const clearBtn = document.getElementById('clearBtn');
+
+        // Load items from localStorage
+        function loadItems() {
+            const items = JSON.parse(localStorage.getItem('shoppingList')) || [];
+            renderList(items);
+        }
+
+        // Save items to localStorage
+        function saveItems(items) {
+            localStorage.setItem('shoppingList', JSON.stringify(items));
+        }
+
+        // Render the list
+        function renderList(items) {
+            itemList.innerHTML = '';
+            itemCount.textContent = items.length;
+            clearBtn.disabled = items.length === 0;
+
+            if (items.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            items.forEach((item, index) => {
+                const li = document.createElement('li');
+                li.className = 'list-item';
+                li.innerHTML = `
+                    <span class="item-text">${escapeHtml(item)}</span>
+                    <button class="btn-remove" onclick="removeItem(${index})">Delete</button>
+                `;
+                itemList.appendChild(li);
+            });
+        }
+
+        // Add item
+        function addItem() {
+            const itemText = itemInput.value.trim();
+            
+            if (!itemText) {
+                itemInput.focus();
+                return;
+            }
+
+            const items = JSON.parse(localStorage.getItem('shoppingList')) || [];
+            
+            if (!items.includes(itemText)) {
+                items.push(itemText);
+                saveItems(items);
+                renderList(items);
+                itemInput.value = '';
+                itemInput.focus();
+            } else {
+                alert('This item is already in your list!');
+                itemInput.focus();
+            }
+        }
+
+        // Remove item
+        function removeItem(index) {
+            const items = JSON.parse(localStorage.getItem('shoppingList')) || [];
+            items.splice(index, 1);
+            saveItems(items);
+            renderList(items);
+        }
+
+        // Clear all items
+        function clearList() {
+            if (confirm('Are you sure you want to clear all items?')) {
+                localStorage.removeItem('shoppingList');
+                renderList([]);
+                itemInput.focus();
+            }
+        }
+
+        // Helper function to escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Allow adding items with Enter key
+        itemInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addItem();
+            }
+        });
+
+        // Initialize
+        loadItems();
+        itemInput.focus();
+    </script>
+</body>
+</html>

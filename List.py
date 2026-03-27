@@ -27,15 +27,19 @@ class ShoppingList:
 
     def add_item(self, item: str):
         item = item.strip()
-        if item and item not in self.items:
-            self.items.append(item)
+        # Check for duplicates (case-insensitive)
+        if item and not any(existing.lower() == item.lower() for existing in self.items):
+            self.items.append(item.capitalize())
             self.save()
 
     def remove_item(self, item: str):
         item = item.strip()
-        if item in self.items:
-            self.items.remove(item)
-            self.save()
+        # Remove item (case-insensitive)
+        for existing in self.items[:]:
+            if existing.lower() == item.lower():
+                self.items.remove(existing)
+                self.save()
+                return
 
     def clear(self):
         self.items = []
